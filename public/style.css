@@ -725,6 +725,8 @@ hr {
   border: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
+  position: relative;
+  z-index: 10;
 }
 
 .assignment-card:hover {
@@ -849,6 +851,13 @@ hr {
   font-size: 2.5rem;
   font-weight: 700;
   line-height: 1.2;
+  view-transition-name: assignment-title-transition;
+}
+
+::view-transition-old(assignment-title-transition),
+::view-transition-new(assignment-title-transition) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .modal-body .description {

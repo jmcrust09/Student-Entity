@@ -251,10 +251,24 @@ async function loadAssignments() {
     item.innerHTML = `
       <div class="assignment-card-content">
         <span class="assignment-icon">${icon}</span>
-        <h4 class="assignment-title">${a.title}</h4>
+        <h4 class="assignment-title" style="margin:0;">${a.title}</h4>
       </div>
     `;
-    item.addEventListener('click', () => openAssignmentModal(a));
+    item.addEventListener('click', (e) => {
+      // Remover el transition name de todas las demás tareas
+      document.querySelectorAll('.assignment-title').forEach(el => {
+        el.style.viewTransitionName = 'none';
+      });
+      // Asignar transition name solo a la clickeada
+      const titleEl = item.querySelector('.assignment-title');
+      if (titleEl) titleEl.style.viewTransitionName = 'assignment-title-transition';
+      
+      if (document.startViewTransition) {
+        document.startViewTransition(() => openAssignmentModal(a));
+      } else {
+        openAssignmentModal(a);
+      }
+    });
     list.appendChild(item);
   });
 }
