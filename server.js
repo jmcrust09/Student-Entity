@@ -52,7 +52,8 @@ function initData() {
   const defaultUsers = {
     users: [
       { id: 'u_prof', username: 'jmcr2009', password: '$2b$10$3fs1nMZOOGzVi0tsdKuafO4MimDlnpiGApX3gyhlU0BV964042KpS', role: 'profesor', name: 'Juan Manuel Cruz' },
-      { id: 'u_alum', username: 'Max :D', password: '$2b$10$.gQEuwXLU/4LeU8qyn9ojOa/X1GKCh1Yi.VxEn5rqVZDrtIQSRI7S', role: 'alumno', name: 'Maximo Rodrigo Carrillo' }
+      { id: 'u_alum', username: 'Max :D', password: '$2b$10$.gQEuwXLU/4LeU8qyn9ojOa/X1GKCh1Yi.VxEn5rqVZDrtIQSRI7S', role: 'alumno', name: 'Maximo Rodrigo Carrillo' },
+      { id: 'u_alum2', username: 'Steffy :3', password: '$2b$10$S5/rZ9jS7cfbbEbPGFt14.bUfoDCB2BAkE4Q157iNZhFm.wHxV9sq', role: 'alumno', name: 'Karla Estefania Duran' }
     ]
   };
   
@@ -66,20 +67,22 @@ function initData() {
   const defaultEnrollments = {
     enrollments: [
       { class_id: 'c_tc26a', user_id: 'u_alum' },
-      { class_id: 'c_mat26a', user_id: 'u_alum' }
+      { class_id: 'c_mat26a', user_id: 'u_alum' },
+      { class_id: 'c_tc26a', user_id: 'u_alum2' },
+      { class_id: 'c_mat26a', user_id: 'u_alum2' }
     ]
   };
 
   const defaultAssignments = {
     assignments: [
-      { id: 'a_tc1', class_id: 'c_tc26a', type: 'tarea', title: 'Ensayo sobre IA', description: 'Escribir un ensayo sobre Inteligencia Artificial. Lorem ipsum dolor sit amet, consectetur adipiscing elit.', due_date: '2026-05-01', content: 'Debes investigar sobre redes neuronales y escribir al menos 2 páginas.' },
-      { id: 'a_tc2', class_id: 'c_tc26a', type: 'tarea', title: 'Proyecto de Programación', description: 'Crear una calculadora en JS. Lorem ipsum dolor sit amet.', due_date: '2026-05-10', content: 'La calculadora debe soportar suma, resta, multiplicación y división.' },
-      { id: 'a_tc3', class_id: 'c_tc26a', type: 'anuncio', title: 'Bienvenidos al curso', description: 'Lorem ipsum dolor sit amet, bienvenidos al curso de tecnología.', content: 'Nos vemos los martes y jueves.' },
-      { id: 'a_tc4', class_id: 'c_tc26a', type: 'recurso', title: 'Documentación de JS', description: 'Enlace útil para programar.', content: 'https://developer.mozilla.org/es/docs/Web/JavaScript' },
-      { id: 'a_mat1', class_id: 'c_mat26a', type: 'tarea', title: 'Guía de Ejercicios 1', description: 'Resolver ecuaciones de primer grado.', due_date: '2026-05-05', content: 'Lorem ipsum dolor sit amet, resolver 10 ejercicios.' },
-      { id: 'a_mat2', class_id: 'c_mat26a', type: 'tarea', title: 'Guía de Ejercicios 2', description: 'Geometría básica.', due_date: '2026-05-15', content: 'Resolver problemas de áreas y perímetros.' },
-      { id: 'a_mat3', class_id: 'c_mat26a', type: 'anuncio', title: 'Examen sorpresa', description: 'No falten la próxima semana.', content: 'Habrá examen sorpresa, estudien todo.' },
-      { id: 'a_mat4', class_id: 'c_mat26a', type: 'recurso', title: 'Libro de Baldor', description: 'Referencia para álgebra.', content: 'Estudien del capítulo 1 al 5.' }
+      { id: 'a_tc1', class_id: 'c_tc26a', type: 'tarea', title: 'Ensayo sobre IA', description: 'Escribir un ensayo sobre Inteligencia Artificial. Lorem ipsum dolor sit amet, consectetur adipiscing elit.', due_date: '2026-05-01', content: 'Debes investigar sobre redes neuronales y escribir al menos 2 páginas.', visibility: 'visible', allowed_students: [] },
+      { id: 'a_tc2', class_id: 'c_tc26a', type: 'tarea', title: 'Proyecto de Programación', description: 'Crear una calculadora en JS. Lorem ipsum dolor sit amet.', due_date: '2026-05-10', content: 'La calculadora debe soportar suma, resta, multiplicación y división.', visibility: 'visible', allowed_students: [] },
+      { id: 'a_tc3', class_id: 'c_tc26a', type: 'anuncio', title: 'Bienvenidos al curso', description: 'Lorem ipsum dolor sit amet, bienvenidos al curso de tecnología.', content: 'Nos vemos los martes y jueves.', visibility: 'visible', allowed_students: [] },
+      { id: 'a_tc4', class_id: 'c_tc26a', type: 'recurso', title: 'Documentación de JS', description: 'Enlace útil para programar.', content: 'https://developer.mozilla.org/es/docs/Web/JavaScript', visibility: 'visible', allowed_students: [] },
+      { id: 'a_mat1', class_id: 'c_mat26a', type: 'tarea', title: 'Guía de Ejercicios 1', description: 'Resolver ecuaciones de primer grado.', due_date: '2026-05-05', content: 'Lorem ipsum dolor sit amet, resolver 10 ejercicios.', visibility: 'visible', allowed_students: [] },
+      { id: 'a_mat2', class_id: 'c_mat26a', type: 'tarea', title: 'Guía de Ejercicios 2', description: 'Geometría básica.', due_date: '2026-05-15', content: 'Resolver problemas de áreas y perímetros.', visibility: 'visible', allowed_students: [] },
+      { id: 'a_mat3', class_id: 'c_mat26a', type: 'anuncio', title: 'Examen sorpresa', description: 'No falten la próxima semana.', content: 'Habrá examen sorpresa, estudien todo.', visibility: 'visible', allowed_students: [] },
+      { id: 'a_mat4', class_id: 'c_mat26a', type: 'recurso', title: 'Libro de Baldor', description: 'Referencia para álgebra.', content: 'Estudien del capítulo 1 al 5.', visibility: 'visible', allowed_students: [] }
     ]
   };
 
@@ -253,19 +256,47 @@ app.post('/api/classes/join', verifyToken, (req, res) => {
   res.json({ message: 'Inscrito exitosamente', class: safeClass });
 });
 
+app.get('/api/classes/:id/students', verifyToken, (req, res) => {
+  if (req.user.role !== 'profesor') return res.status(403).json({ error: 'Acceso denegado' });
+  
+  const classId = req.params.id;
+  const enrollmentsData = readJson('enrollments.json') || { enrollments: [] };
+  const usersData = readJson('users.json') || { users: [] };
+  
+  const classEnrollments = enrollmentsData.enrollments.filter(e => e.class_id === classId);
+  const studentIds = classEnrollments.map(e => e.user_id);
+  
+  const students = usersData.users
+    .filter(u => studentIds.includes(u.id))
+    .map(u => ({ id: u.id, name: u.name, username: u.username }));
+    
+  res.json(students);
+});
+
 // 4. Tareas (Assignments)
 app.get('/api/classes/:id/contents', verifyToken, (req, res) => {
   const classId = req.params.id;
   const data = readJson('assignments.json') || { assignments: [] };
   
-  const classAssignments = data.assignments.filter(a => a.class_id === classId);
+  let classAssignments = data.assignments.filter(a => a.class_id === classId);
+  
+  if (req.user.role === 'alumno') {
+    classAssignments = classAssignments.filter(a => {
+      // Default to visible if missing
+      const vis = a.visibility || 'visible';
+      if (vis === 'visible') return true;
+      if (vis === 'custom' && a.allowed_students && a.allowed_students.includes(req.user.id)) return true;
+      return false;
+    });
+  }
+  
   res.json(classAssignments);
 });
 
 app.post('/api/assignments', verifyToken, (req, res) => {
   if (req.user.role !== 'profesor') return res.status(403).json({ error: 'Solo profesores pueden crear tareas' });
 
-  const { class_id, title, description, due_date, type, content } = req.body;
+  const { class_id, title, description, due_date, type, content, visibility, allowed_students } = req.body;
   const data = readJson('assignments.json') || { assignments: [] };
   
   const newAssignment = {
@@ -275,6 +306,8 @@ app.post('/api/assignments', verifyToken, (req, res) => {
     description,
     type: type || 'tarea',
     content: content || '',
+    visibility: visibility || 'visible',
+    allowed_students: allowed_students || [],
     due_date: due_date || null,
     blocked: false
   };

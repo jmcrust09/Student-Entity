@@ -279,10 +279,18 @@ async function loadAssignments() {
     if (a.type === 'anuncio') icon = '📢';
     if (a.type === 'recurso') icon = '🔗';
 
+    let visBadge = '';
+    if (currentUser.role === 'profesor') {
+      const vis = a.visibility || 'visible';
+      if (vis === 'private') visBadge = '<span class="vis-badge vis-private">🔒 Privado</span>';
+      else if (vis === 'custom') visBadge = '<span class="vis-badge vis-custom">👁 Personalizado</span>';
+    }
+
     item.innerHTML = `
       <div class="assignment-card-content">
         <span class="assignment-icon">${icon}</span>
         <h4 class="assignment-title" style="margin:0;">${a.title}</h4>
+        ${visBadge}
       </div>
     `;
     item.addEventListener('click', (e) => {
@@ -304,23 +312,91 @@ async function loadAssignments() {
   });
 }
 
+// --- Create Assignment Logic ---
+const createModal = document.getElementById('create-assignment-modal');
+const btnCloseCreateModal = document.getElementById('btn-close-create-modal');
+const visibilitySelect = document.getElementById('create-visibility');
+const customStudentsContainer = document.getElementById('custom-students-container');
+const customStudentsList = document.getElementById('custom-students-list');
+
 document.getElementById('btn-new-assignment').addEventListener('click', async () => {
-  const typeStr = prompt('Tipo (tarea, anuncio, recurso):', 'tarea');
-  const title = prompt('Título:');
-  const description = prompt('Descripción corta:');
-  const content = prompt('Contenido extendido:');
+  // Clear previous values
+  document.getElementById('form-create-assignment').reset();
+  customStudentsContainer.classList.add('hidden');
   
-  if (title) {
-    await fetchWithAuth(`${API_URL}/assignments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ class_id: currentClassId, title, description, content, type: typeStr || 'tarea' })
-    });
-    loadAssignments();
+  // Fetch students for custom visibility
+  try {
+    const res = await fetchWithAuth(`${API_URL}/classes/${currentClassId}/students`);
+    const students = await res.json();
+    
+    customStudentsList.innerHTML = '';
+    if (students.length === 0) {
+      customStudentsList.innerHTML = '<p class="text-muted" style="font-size:0.85rem;">No hay alumnos inscritos.</p>';
+    } else {
+      students.forEach(st => {
+        const lbl = document.createElement('label');
+        lbl.style.display = 'flex';
+        lbl.style.alignItems = 'center';
+        lbl.style.gap = '0.5rem';
+        lbl.style.cursor = 'pointer';
+        lbl.innerHTML = `<input type="checkbox" name="custom-student" value="${st.id}"> ${st.name} (@${st.username})`;
+        customStudentsList.appendChild(lbl);
+      });
+    }
+  } catch(e) { console.error(e); }
+
+  createModal.classList.remove('hidden');
+});
+
+btnCloseCreateModal.addEventListener('click', () => {
+  createModal.classList.add('hidden');
+});
+
+visibilitySelect.addEventListener('change', () => {
+  if (visibilitySelect.value === 'custom') {
+    customStudentsContainer.classList.remove('hidden');
+  } else {
+    customStudentsContainer.classList.add('hidden');
   }
 });
 
-// Modal Logic
+document.getElementById('form-create-assignment').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const title = document.getElementById('create-title').value;
+  const description = document.getElementById('create-description').value;
+  const content = document.getElementById('create-content').value;
+  const type = document.getElementById('create-type').value;
+  const visibility = visibilitySelect.value;
+  
+  const allowed_students = [];
+  if (visibility === 'custom') {
+    document.querySelectorAll('input[name="custom-student"]:checked').forEach(chk => {
+      allowed_students.push(chk.value);
+    });
+  }
+
+  try {
+    await fetchWithAuth(`${API_URL}/assignments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        class_id: currentClassId, 
+        title, 
+        description, 
+        content, 
+        type,
+        visibility,
+        allowed_students
+      })
+    });
+    
+    createModal.classList.add('hidden');
+    loadAssignments();
+  } catch(e) { console.error(e); }
+});
+
+// --- Modal Logic ---
 const modal = document.getElementById('assignment-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
 
@@ -390,15 +466,21 @@ async function loadTeacherSubmissions() {
       subs.forEach(s => {
         const div = document.createElement('div');
         div.className = 'submission-item';
+        div.style.background = 'rgba(255,255,255,0.02)';
+        div.style.border = '1px solid var(--border-light)';
+        div.style.padding = '1rem';
+        div.style.borderRadius = '8px';
+        div.style.marginBottom = '0.8rem';
+        
         let fileHtml = '';
         if (s.file_url) {
-          fileHtml = `<a href="/uploads/${s.file_url}" target="_blank" style="color: var(--primary-color);">Descargar ${s.original_name || 'Archivo'}</a>`;
+          fileHtml = `<div style="margin-top: 0.5rem;"><a href="/uploads/${s.file_url}" target="_blank" style="color: var(--primary-color); background: rgba(79, 70, 229, 0.1); padding: 0.4rem 0.8rem; border-radius: 4px; display: inline-block;">📎 Ver archivo adjunto</a></div>`;
         }
         div.innerHTML = `
-          <strong>Usuario ID: ${s.user_id}</strong>
-          <p>${s.content}</p>
+          <strong style="color: var(--text-primary);">ID de Alumno: ${s.user_id}</strong>
+          <p style="margin: 0.5rem 0;">${s.content || '<em>Sin texto adjunto</em>'}</p>
           ${fileHtml}
-          <div style="margin-top: 0.5rem;"><small>${new Date(s.updated_at || s.created_at).toLocaleString()}</small></div>
+          <div style="margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;"><small style="color: var(--text-muted);">${new Date(s.updated_at || s.created_at).toLocaleString()}</small></div>
         `;
         list.appendChild(div);
       });

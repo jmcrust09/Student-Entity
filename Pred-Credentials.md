@@ -15,6 +15,12 @@ Este documento contiene las credenciales generadas automáticamente para acceder
 - **Contraseña:** `passwordMR`
 - **Rol:** Alumno
 
+### Alumna (Prueba de Visibilidad)
+- **Nombre:** Karla Estefania Duran
+- **Usuario:** `Steffy :3`
+- **Contraseña:** `passwordKE`
+- **Rol:** Alumno
+
 ---
 
 ## Clases Inicializadas

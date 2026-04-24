@@ -156,9 +156,49 @@
 
         <!-- Submissions List for teachers -->
         <div id="teacher-submissions-section" class="submission-section hidden">
-          <h3>Entregas de Alumnos</h3>
+          <h3>Entregas de esta Tarea</h3>
           <div id="teacher-submissions-list" class="list-container"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Assignment Modal -->
+  <div id="create-assignment-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 600px;">
+      <button id="btn-close-create-modal" class="btn-close">&times;</button>
+      <div class="modal-header" style="margin-bottom: 1.5rem;">
+        <h2 style="font-size: 2rem;">Nueva Tarea o Recurso</h2>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-assignment">
+          <label for="create-type">Tipo:</label>
+          <select id="create-type" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border-color); border-radius: 6px;">
+            <option value="tarea">Tarea</option>
+            <option value="recurso">Recurso</option>
+            <option value="anuncio">Anuncio</option>
+          </select>
+          
+          <input type="text" id="create-title" placeholder="Título" required style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border-color); border-radius: 6px;">
+          <input type="text" id="create-description" placeholder="Descripción corta" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border-color); border-radius: 6px;">
+          <textarea id="create-content" placeholder="Contenido extendido" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border-color); border-radius: 6px;"></textarea>
+
+          <label for="create-visibility">Visibilidad:</label>
+          <select id="create-visibility" style="width: 100%; padding: 0.8rem; margin-bottom: 1rem; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--border-color); border-radius: 6px;">
+            <option value="visible">Visible para todos</option>
+            <option value="private">Privado (Nadie lo ve)</option>
+            <option value="custom">Personalizado (Solo ciertos alumnos)</option>
+          </select>
+          
+          <div id="custom-students-container" class="hidden" style="margin-bottom: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 6px;">
+            <p style="margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">Selecciona quién puede ver esta publicación:</p>
+            <div id="custom-students-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 150px; overflow-y: auto;">
+              <!-- Checkboxes inyectados aquí -->
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" style="margin-top: 1rem;">Crear</button>
+        </form>
       </div>
     </div>
   </div>
