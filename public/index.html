@@ -1,0 +1,113 @@
+<!DOCTYPE strict html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Entity</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="app">
+    <!-- Navbar (Hidden on Login) -->
+    <nav id="navbar" class="hidden">
+      <div class="nav-brand">Student Entity</div>
+      <div class="nav-user">
+        <span id="nav-user-name"></span>
+        <button id="btn-logout" class="btn-small">Salir</button>
+      </div>
+    </nav>
+
+    <!-- Login View -->
+    <section id="view-login" class="view">
+      <div class="login-card">
+        <h1>Iniciar Sesión</h1>
+        <form id="form-login">
+          <input type="text" id="login-username" placeholder="Usuario" required>
+          <input type="password" id="login-password" placeholder="Contraseña" required>
+          <button type="submit" class="btn-primary">Entrar</button>
+        </form>
+        <div class="login-hint">
+          ¿No tienes cuenta? <a href="#" id="link-to-register">Regístrate aquí</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Register View -->
+    <section id="view-register" class="view hidden">
+      <div class="login-card">
+        <h1>Registro</h1>
+        <form id="form-register">
+          <input type="text" id="reg-name" placeholder="Nombre completo" required>
+          <input type="text" id="reg-username" placeholder="Usuario" required>
+          <input type="password" id="reg-password" placeholder="Contraseña" required>
+          <select id="reg-role"
+            style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+            <option value="alumno">Alumno</option>
+            <option value="profesor">Profesor</option>
+          </select>
+          <button type="submit" class="btn-primary">Registrarse</button>
+        </form>
+        <div class="login-hint">
+          ¿Ya tienes cuenta? <a href="#" id="link-to-login">Inicia sesión</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard View -->
+    <section id="view-dashboard" class="view hidden">
+      <header class="view-header">
+        <h2>Mis Clases</h2>
+        <button id="btn-new-class" class="btn-primary hidden">Crear Clase</button>
+      </header>
+      <div id="classes-list" class="grid-list">
+        <!-- Classes will be injected here -->
+      </div>
+    </section>
+
+    <!-- Class View -->
+    <section id="view-class" class="view hidden">
+      <header class="view-header">
+        <button id="btn-back-dashboard" class="btn-small">&larr; Volver</button>
+        <h2 id="class-title">Título de la Clase</h2>
+      </header>
+
+      <div class="class-content">
+        <!-- Assignments Section -->
+        <div class="section-assignments">
+          <div class="section-header">
+            <h3>Tareas</h3>
+            <button id="btn-new-assignment" class="btn-small hidden">Nueva Tarea</button>
+          </div>
+          <div id="assignments-list" class="list-container">
+            <!-- Assignments will be injected here -->
+          </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="section-comments">
+          <h3>Comentarios de la Clase</h3>
+          <div id="comments-list" class="list-container">
+            <!-- Comments will be injected here -->
+          </div>
+          <form id="form-comment" class="form-comment">
+            <textarea id="comment-content" placeholder="Escribe un comentario..." required></textarea>
+            <div class="comment-actions">
+              <label class="checkbox-label">
+                <input type="checkbox" id="comment-anonymous"> Anónimo
+              </label>
+              <button type="submit" class="btn-primary">Enviar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
