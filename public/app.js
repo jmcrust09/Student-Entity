@@ -5,6 +5,7 @@ const API_URL = '/api';
 let currentUser = null;
 let currentToken = null;
 let currentClassId = null;
+let currentAssignment = null;
 
 // DOM Elements
 const views = {
@@ -136,12 +137,15 @@ btnLogout.addEventListener('click', logout);
 async function showDashboard() {
   showView('dashboard');
   
-  // Show/hide create class button
   const btnNewClass = document.getElementById('btn-new-class');
+  const btnJoinClass = document.getElementById('btn-join-class');
+  
   if (currentUser.role === 'profesor') {
     btnNewClass.classList.remove('hidden');
+    btnJoinClass.classList.add('hidden');
   } else {
     btnNewClass.classList.add('hidden');
+    btnJoinClass.classList.remove('hidden');
   }
 
   // Fetch classes
@@ -155,9 +159,14 @@ async function showDashboard() {
     classes.forEach(cls => {
       const card = document.createElement('div');
       card.className = 'card';
+      let codeHtml = '';
+      if (currentUser.role === 'profesor' && cls.code) {
+        codeHtml = `<div class="class-code">Código: <strong>${cls.code}</strong></div>`;
+      }
       card.innerHTML = `
         <h3>${cls.name}</h3>
         <p>${cls.description}</p>
+        ${codeHtml}
       `;
       card.addEventListener('click', () => showClass(cls));
       list.appendChild(card);
@@ -177,6 +186,27 @@ document.getElementById('btn-new-class').addEventListener('click', async () => {
       body: JSON.stringify({ name, description })
     });
     showDashboard();
+  }
+});
+
+document.getElementById('btn-join-class').addEventListener('click', async () => {
+  const code = prompt('Ingresa el código de la clase:');
+  if (code) {
+    try {
+      const res = await fetchWithAuth(`${API_URL}/classes/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      if (res.ok) {
+        showDashboard();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Error al unirse a la clase');
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 });
 
@@ -212,26 +242,127 @@ async function loadAssignments() {
   
   assignments.forEach(a => {
     const item = document.createElement('div');
-    item.className = 'list-item';
+    item.className = 'assignment-card ' + (a.type || 'tarea');
+    
+    let icon = '📝';
+    if (a.type === 'anuncio') icon = '📢';
+    if (a.type === 'recurso') icon = '🔗';
+
     item.innerHTML = `
-      <h4>${a.title}</h4>
-      <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">${a.description}</p>
+      <div class="assignment-card-content">
+        <span class="assignment-icon">${icon}</span>
+        <h4 class="assignment-title">${a.title}</h4>
+      </div>
     `;
+    item.addEventListener('click', () => openAssignmentModal(a));
     list.appendChild(item);
   });
 }
 
 document.getElementById('btn-new-assignment').addEventListener('click', async () => {
-  const title = prompt('Título de la tarea:');
-  const description = prompt('Descripción:');
+  const typeStr = prompt('Tipo (tarea, anuncio, recurso):', 'tarea');
+  const title = prompt('Título:');
+  const description = prompt('Descripción corta:');
+  const content = prompt('Contenido extendido:');
+  
   if (title) {
     await fetchWithAuth(`${API_URL}/assignments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ class_id: currentClassId, title, description })
+      body: JSON.stringify({ class_id: currentClassId, title, description, content, type: typeStr || 'tarea' })
     });
     loadAssignments();
   }
+});
+
+// Modal Logic
+const modal = document.getElementById('assignment-modal');
+const btnCloseModal = document.getElementById('btn-close-modal');
+
+btnCloseModal.addEventListener('click', () => {
+  modal.classList.add('hidden');
+  currentAssignment = null;
+});
+
+async function openAssignmentModal(assignment) {
+  currentAssignment = assignment;
+  document.getElementById('modal-type-badge').textContent = (assignment.type || 'tarea').toUpperCase();
+  document.getElementById('modal-title').textContent = assignment.title;
+  document.getElementById('modal-description').textContent = assignment.description;
+  document.getElementById('modal-content-area').innerHTML = `<p>${assignment.content || 'Sin contenido extra'}</p>`;
+  
+  const submissionSection = document.getElementById('submission-section');
+  const teacherSection = document.getElementById('teacher-submissions-section');
+  
+  submissionSection.classList.add('hidden');
+  teacherSection.classList.add('hidden');
+  document.getElementById('submission-status').classList.add('hidden');
+  document.getElementById('submission-content').value = '';
+
+  if (assignment.type === 'tarea' || !assignment.type) {
+    if (currentUser.role === 'alumno') {
+      submissionSection.classList.remove('hidden');
+      await loadStudentSubmission();
+    } else {
+      teacherSection.classList.remove('hidden');
+      await loadTeacherSubmissions();
+    }
+  }
+  
+  modal.classList.remove('hidden');
+}
+
+async function loadStudentSubmission() {
+  try {
+    const res = await fetchWithAuth(`${API_URL}/assignments/${currentAssignment.id}/submissions`);
+    const subs = await res.json();
+    if (subs.length > 0) {
+      const sub = subs[0];
+      document.getElementById('submission-content').value = sub.content;
+      const statusDiv = document.getElementById('submission-status');
+      statusDiv.textContent = 'Entrega guardada: ' + new Date(sub.updated_at || sub.created_at).toLocaleString();
+      statusDiv.classList.remove('hidden');
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function loadTeacherSubmissions() {
+  try {
+    const res = await fetchWithAuth(`${API_URL}/assignments/${currentAssignment.id}/submissions`);
+    const subs = await res.json();
+    const list = document.getElementById('teacher-submissions-list');
+    list.innerHTML = '';
+    if (subs.length === 0) {
+      list.innerHTML = '<p class="text-muted">Aún no hay entregas.</p>';
+    } else {
+      subs.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'submission-item';
+        div.innerHTML = `
+          <strong>Usuario ID: ${s.user_id}</strong>
+          <p>${s.content}</p>
+          <small>${new Date(s.updated_at || s.created_at).toLocaleString()}</small>
+        `;
+        list.appendChild(div);
+      });
+    }
+  } catch(e) { console.error(e); }
+}
+
+document.getElementById('form-submit-assignment').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const content = document.getElementById('submission-content').value;
+  try {
+    const res = await fetchWithAuth(`${API_URL}/assignments/${currentAssignment.id}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+    if (res.ok) {
+      await loadStudentSubmission();
+      alert('Entrega enviada exitosamente');
+    }
+  } catch(e) { console.error(e); }
 });
 
 // Comments
