@@ -316,8 +316,22 @@ app.post('/api/assignments', verifyToken, (req, res) => {
   writeJson('assignments.json', data);
   res.status(201).json(newAssignment);
 });
-
 // Entregas (Submissions)
+app.patch('/api/assignments/:id', verifyToken, (req, res) => {
+  if (req.user.role !== 'profesor') return res.status(403).json({ error: 'Solo profesores pueden editar tareas' });
+  
+  const data = readJson('assignments.json') || { assignments: [] };
+  const assignment = data.assignments.find(a => a.id === req.params.id);
+  if (!assignment) return res.status(404).json({ error: 'Tarea no encontrada' });
+  
+  const { visibility, allowed_students } = req.body;
+  if (visibility !== undefined) assignment.visibility = visibility;
+  if (allowed_students !== undefined) assignment.allowed_students = allowed_students;
+  
+  writeJson('assignments.json', data);
+  res.json(assignment);
+});
+
 app.post('/api/assignments/:id/submit', verifyToken, upload.single('file'), (req, res) => {
   if (req.user.role !== 'alumno') return res.status(403).json({ error: 'Solo alumnos pueden enviar tareas' });
   

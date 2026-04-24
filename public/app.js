@@ -414,12 +414,57 @@ async function openAssignmentModal(assignment) {
   
   const submissionSection = document.getElementById('submission-section');
   const teacherSection = document.getElementById('teacher-submissions-section');
+  const visSection = document.getElementById('modal-visibility-section');
   
   submissionSection.classList.add('hidden');
   teacherSection.classList.add('hidden');
+  visSection.classList.add('hidden');
   document.getElementById('submission-status').classList.add('hidden');
   document.getElementById('submission-content').value = '';
   document.getElementById('submission-file').value = '';
+
+  if (currentUser.role === 'profesor') {
+    // Show visibility controls
+    visSection.classList.remove('hidden');
+    const visSelect = document.getElementById('modal-visibility-select');
+    const modalCustomStudents = document.getElementById('modal-custom-students');
+    
+    visSelect.value = assignment.visibility || 'visible';
+    
+    // Load students for custom option
+    try {
+      const res = await fetchWithAuth(`${API_URL}/classes/${currentClassId}/students`);
+      const students = await res.json();
+      
+      modalCustomStudents.innerHTML = '';
+      students.forEach(st => {
+        const lbl = document.createElement('label');
+        lbl.style.display = 'flex';
+        lbl.style.alignItems = 'center';
+        lbl.style.gap = '0.5rem';
+        lbl.style.cursor = 'pointer';
+        lbl.style.padding = '0.3rem 0';
+        const isChecked = (assignment.allowed_students || []).includes(st.id) ? 'checked' : '';
+        lbl.innerHTML = `<input type="checkbox" name="modal-custom-student" value="${st.id}" ${isChecked}> ${st.name} (@${st.username})`;
+        modalCustomStudents.appendChild(lbl);
+      });
+    } catch(e) { console.error(e); }
+    
+    // Show/hide student list
+    if (visSelect.value === 'custom') {
+      modalCustomStudents.classList.remove('hidden');
+    } else {
+      modalCustomStudents.classList.add('hidden');
+    }
+    
+    visSelect.onchange = () => {
+      if (visSelect.value === 'custom') {
+        modalCustomStudents.classList.remove('hidden');
+      } else {
+        modalCustomStudents.classList.add('hidden');
+      }
+    };
+  }
 
   if (assignment.type === 'tarea' || !assignment.type) {
     if (currentUser.role === 'alumno') {
@@ -433,6 +478,37 @@ async function openAssignmentModal(assignment) {
   
   modal.classList.remove('hidden');
 }
+
+// Save visibility changes
+document.getElementById('btn-save-visibility').addEventListener('click', async () => {
+  if (!currentAssignment) return;
+  
+  const visibility = document.getElementById('modal-visibility-select').value;
+  const allowed_students = [];
+  
+  if (visibility === 'custom') {
+    document.querySelectorAll('input[name="modal-custom-student"]:checked').forEach(chk => {
+      allowed_students.push(chk.value);
+    });
+  }
+  
+  try {
+    const res = await fetchWithAuth(`${API_URL}/assignments/${currentAssignment.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visibility, allowed_students })
+    });
+    
+    if (res.ok) {
+      const updated = await res.json();
+      currentAssignment.visibility = updated.visibility;
+      currentAssignment.allowed_students = updated.allowed_students;
+      alert('Visibilidad actualizada correctamente');
+      loadAssignments(); // Refresh the cards to show new badge
+    }
+  } catch(e) { console.error(e); }
+});
+
 
 async function loadStudentSubmission() {
   try {

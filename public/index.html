@@ -140,6 +140,20 @@
         <p id="modal-description" class="description"></p>
         <div id="modal-content-area" class="content-area"></div>
         
+        <!-- Visibility Controls for teachers -->
+        <div id="modal-visibility-section" class="hidden" style="margin-top: 2rem; padding: 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-light); border-radius: 12px;">
+          <h4 style="margin: 0 0 1rem 0; font-size: 0.95rem; color: var(--text-secondary);">⚙️ Visibilidad de esta publicación</h4>
+          <select id="modal-visibility-select" style="width: 100%; padding: 0.7rem; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 0.75rem;">
+            <option value="visible">🟢 Visible para todos</option>
+            <option value="private">🔴 Privado (nadie lo ve)</option>
+            <option value="custom">🟡 Personalizado (ciertos alumnos)</option>
+          </select>
+          <div id="modal-custom-students" class="hidden" style="background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 6px; max-height: 120px; overflow-y: auto;">
+            <!-- Checkboxes inyectados -->
+          </div>
+          <button id="btn-save-visibility" class="btn-primary" style="margin-top: 0.75rem; width: 100%; padding: 0.6rem;">Guardar Cambios de Visibilidad</button>
+        </div>
+
         <!-- Submission Section for students -->
         <div id="submission-section" class="submission-section hidden">
           <h3>Tu Entrega</h3>
