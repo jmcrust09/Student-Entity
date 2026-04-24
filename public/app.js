@@ -217,10 +217,41 @@ async function showClass(cls) {
   document.getElementById('class-title').textContent = cls.name;
   
   const btnNewAssignment = document.getElementById('btn-new-assignment');
+  const classTabs = document.getElementById('class-tabs');
+  const classBoardView = document.getElementById('class-board-view');
+  const classSubmissionsView = document.getElementById('class-submissions-view');
+  
   if (currentUser.role === 'profesor') {
     btnNewAssignment.classList.remove('hidden');
+    classTabs.classList.remove('hidden');
+    
+    // Setup tabs
+    const tabBoard = document.getElementById('tab-board');
+    const tabSubmissions = document.getElementById('tab-submissions');
+    
+    tabBoard.onclick = () => {
+      tabBoard.classList.add('active');
+      tabSubmissions.classList.remove('active');
+      classBoardView.classList.remove('hidden');
+      classSubmissionsView.classList.add('hidden');
+    };
+    
+    tabSubmissions.onclick = () => {
+      tabSubmissions.classList.add('active');
+      tabBoard.classList.remove('active');
+      classSubmissionsView.classList.remove('hidden');
+      classBoardView.classList.add('hidden');
+      loadAllClassSubmissions();
+    };
+    
+    // Reset to board by default
+    tabBoard.click();
+    
   } else {
     btnNewAssignment.classList.add('hidden');
+    classTabs.classList.add('hidden');
+    classBoardView.classList.remove('hidden');
+    classSubmissionsView.classList.add('hidden');
   }
 
   loadAssignments();
@@ -312,6 +343,7 @@ async function openAssignmentModal(assignment) {
   teacherSection.classList.add('hidden');
   document.getElementById('submission-status').classList.add('hidden');
   document.getElementById('submission-content').value = '';
+  document.getElementById('submission-file').value = '';
 
   if (assignment.type === 'tarea' || !assignment.type) {
     if (currentUser.role === 'alumno') {
@@ -332,9 +364,15 @@ async function loadStudentSubmission() {
     const subs = await res.json();
     if (subs.length > 0) {
       const sub = subs[0];
-      document.getElementById('submission-content').value = sub.content;
+      document.getElementById('submission-content').value = sub.content || '';
       const statusDiv = document.getElementById('submission-status');
-      statusDiv.textContent = 'Entrega guardada: ' + new Date(sub.updated_at || sub.created_at).toLocaleString();
+      
+      let fileHtml = '';
+      if (sub.file_url) {
+        fileHtml = `<div style="margin-top: 0.5rem;"><a href="/uploads/${sub.file_url}" target="_blank" style="color: var(--primary-color); text-decoration: underline;">📄 Ver archivo: ${sub.original_name || 'Documento'}</a></div>`;
+      }
+      
+      statusDiv.innerHTML = `Entrega guardada: ${new Date(sub.updated_at || sub.created_at).toLocaleString()} ${fileHtml}`;
       statusDiv.classList.remove('hidden');
     }
   } catch(e) { console.error(e); }
@@ -352,10 +390,15 @@ async function loadTeacherSubmissions() {
       subs.forEach(s => {
         const div = document.createElement('div');
         div.className = 'submission-item';
+        let fileHtml = '';
+        if (s.file_url) {
+          fileHtml = `<a href="/uploads/${s.file_url}" target="_blank" style="color: var(--primary-color);">Descargar ${s.original_name || 'Archivo'}</a>`;
+        }
         div.innerHTML = `
           <strong>Usuario ID: ${s.user_id}</strong>
           <p>${s.content}</p>
-          <small>${new Date(s.updated_at || s.created_at).toLocaleString()}</small>
+          ${fileHtml}
+          <div style="margin-top: 0.5rem;"><small>${new Date(s.updated_at || s.created_at).toLocaleString()}</small></div>
         `;
         list.appendChild(div);
       });
@@ -366,18 +409,88 @@ async function loadTeacherSubmissions() {
 document.getElementById('form-submit-assignment').addEventListener('submit', async (e) => {
   e.preventDefault();
   const content = document.getElementById('submission-content').value;
+  const fileInput = document.getElementById('submission-file');
+  
+  const formData = new FormData();
+  formData.append('content', content);
+  if (fileInput.files.length > 0) {
+    formData.append('file', fileInput.files[0]);
+  }
+  
   try {
-    const res = await fetchWithAuth(`${API_URL}/assignments/${currentAssignment.id}/submit`, {
+    const res = await fetch(`${API_URL}/assignments/${currentAssignment.id}/submit`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content })
+      headers: {
+        'Authorization': `Bearer ${currentToken}`
+      },
+      body: formData
     });
+    
+    if (res.status === 401 || res.status === 403) {
+      logout();
+      return;
+    }
+    
     if (res.ok) {
       await loadStudentSubmission();
       alert('Entrega enviada exitosamente');
     }
   } catch(e) { console.error(e); }
 });
+
+// All Submissions for Professor (Tab)
+async function loadAllClassSubmissions() {
+  try {
+    const res = await fetchWithAuth(`${API_URL}/classes/${currentClassId}/all-submissions`);
+    const subs = await res.json();
+    
+    const list = document.getElementById('all-submissions-list');
+    list.innerHTML = '';
+    
+    if (subs.length === 0) {
+      list.innerHTML = '<p class="text-muted">No hay ninguna entrega en esta clase todavía.</p>';
+      return;
+    }
+    
+    // Agrupar por alumno
+    const byStudent = {};
+    subs.forEach(s => {
+      if (!byStudent[s.user_id]) {
+        byStudent[s.user_id] = { name: s.student_name, submissions: [] };
+      }
+      byStudent[s.user_id].submissions.push(s);
+    });
+    
+    Object.keys(byStudent).forEach(userId => {
+      const studentData = byStudent[userId];
+      
+      const card = document.createElement('div');
+      card.className = 'card';
+      
+      let subsHtml = studentData.submissions.map(s => {
+        let fileHtml = s.file_url ? `<br><a href="/uploads/${s.file_url}" target="_blank" style="color: var(--primary-color);">📎 ${s.original_name || 'Documento'}</a>` : '';
+        return `
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-light);">
+            <strong>Tarea: ${s.assignment_title}</strong>
+            <p style="margin: 0.5rem 0;">${s.content || '<em>Sin texto</em>'}</p>
+            ${fileHtml}
+            <div style="margin-top: 0.5rem;"><small>${new Date(s.updated_at || s.created_at).toLocaleString()}</small></div>
+          </div>
+        `;
+      }).join('');
+      
+      card.innerHTML = `
+        <h3 style="color: var(--text-primary); margin-bottom: 0;">${studentData.name}</h3>
+        <p style="font-size: 0.8rem; margin-bottom: 1rem;">ID: ${userId}</p>
+        ${subsHtml}
+      `;
+      list.appendChild(card);
+    });
+    
+  } catch(e) {
+    console.error(e);
+  }
+}
 
 // Comments
 async function loadComments() {

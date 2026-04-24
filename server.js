@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
 
 const app = express();
 app.use(cors());
@@ -12,6 +13,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const DATA_DIR = path.join(__dirname, 'data');
 const JWT_SECRET = 'educative-platform-secret-2026';
+
+// Configuración de Multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, 'public', 'uploads'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage });
 
 // Utilidades para leer y escribir JSON
 function readJson(filename) {
@@ -80,7 +93,11 @@ function initData() {
   };
 
   const defaultSubmissions = {
-    submissions: []
+    submissions: [
+      { id: 'sub_def_1', assignment_id: 'a_tc1', user_id: 'u_alum', content: 'Aquí está mi ensayo de IA.', file_url: 'ACT_3_1_2.pdf', original_name: 'ACT 3.1.2 Practica Scrum Metodologia Aplicada.pdf', created_at: new Date().toISOString() },
+      { id: 'sub_def_2', assignment_id: 'a_mat1', user_id: 'u_alum', content: 'Envío la guía de ejercicios 1 terminada.', file_url: 'Act_Tarea_2_1.pdf', original_name: 'Act_Tarea_2.1_2.2_Partes del término_Binomio al cuadrado.pdf', created_at: new Date().toISOString() },
+      { id: 'sub_def_3', assignment_id: 'a_mat2', user_id: 'u_alum', content: 'Segunda parte de los ejercicios listos.', file_url: 'Act_Tarea_2_3.pdf', original_name: 'Act_Tarea_2.3_Binomio al cubo_Binomio conjugado_Binomio Término común.pdf', created_at: new Date().toISOString() }
+    ]
   };
 
   if (!fs.existsSync(path.join(DATA_DIR, 'users.json'))) writeJson('users.json', defaultUsers);
@@ -268,7 +285,7 @@ app.post('/api/assignments', verifyToken, (req, res) => {
 });
 
 // Entregas (Submissions)
-app.post('/api/assignments/:id/submit', verifyToken, (req, res) => {
+app.post('/api/assignments/:id/submit', verifyToken, upload.single('file'), (req, res) => {
   if (req.user.role !== 'alumno') return res.status(403).json({ error: 'Solo alumnos pueden enviar tareas' });
   
   const assignmentId = req.params.id;
@@ -277,15 +294,28 @@ app.post('/api/assignments/:id/submit', verifyToken, (req, res) => {
   
   let submission = data.submissions.find(s => s.assignment_id === assignmentId && s.user_id === req.user.id);
   
+  let fileData = {};
+  if (req.file) {
+    fileData = {
+      file_url: req.file.filename,
+      original_name: req.file.originalname
+    };
+  }
+  
   if (submission) {
-    submission.content = content;
+    submission.content = content !== undefined ? content : submission.content;
     submission.updated_at = new Date().toISOString();
+    if (req.file) {
+      submission.file_url = fileData.file_url;
+      submission.original_name = fileData.original_name;
+    }
   } else {
     submission = {
       id: 'sub' + Date.now(),
       assignment_id: assignmentId,
       user_id: req.user.id,
-      content,
+      content: content || '',
+      ...fileData,
       created_at: new Date().toISOString()
     };
     data.submissions.push(submission);
@@ -306,6 +336,33 @@ app.get('/api/assignments/:id/submissions', verifyToken, (req, res) => {
     const sub = data.submissions.find(s => s.assignment_id === assignmentId && s.user_id === req.user.id);
     res.json(sub ? [sub] : []);
   }
+});
+
+app.get('/api/classes/:id/all-submissions', verifyToken, (req, res) => {
+  if (req.user.role !== 'profesor') return res.status(403).json({ error: 'Solo profesores pueden ver todas las entregas de la clase' });
+  
+  const classId = req.params.id;
+  const assignmentsData = readJson('assignments.json') || { assignments: [] };
+  const submissionsData = readJson('submissions.json') || { submissions: [] };
+  const usersData = readJson('users.json') || { users: [] };
+  
+  const classAssignments = assignmentsData.assignments.filter(a => a.class_id === classId);
+  const assignmentIds = classAssignments.map(a => a.id);
+  
+  const classSubmissions = submissionsData.submissions.filter(s => assignmentIds.includes(s.assignment_id));
+  
+  // Agregar información útil para el frontend
+  const enrichedSubmissions = classSubmissions.map(s => {
+    const student = usersData.users.find(u => u.id === s.user_id);
+    const assignment = classAssignments.find(a => a.id === s.assignment_id);
+    return {
+      ...s,
+      student_name: student ? student.name : 'Desconocido',
+      assignment_title: assignment ? assignment.title : 'Sin título'
+    };
+  });
+  
+  res.json(enrichedSubmissions);
 });
 
 // 5. Comentarios

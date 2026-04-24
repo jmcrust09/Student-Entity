@@ -72,12 +72,20 @@
 
     <!-- Class View -->
     <section id="view-class" class="view hidden">
-      <header class="view-header">
-        <button id="btn-back-dashboard" class="btn-small">&larr; Volver</button>
-        <h2 id="class-title">Título de la Clase</h2>
+      <header class="view-header" style="margin-bottom: 1rem;">
+        <div style="display:flex; align-items:center; gap: 1rem;">
+          <button id="btn-back-dashboard" class="btn-small">&larr; Volver</button>
+          <h2 id="class-title">Título de la Clase</h2>
+        </div>
+        
+        <!-- Pestañas del profesor -->
+        <div id="class-tabs" class="class-tabs hidden" style="display:flex; gap: 1rem; margin-top: 1rem;">
+          <button id="tab-board" class="tab-btn active">Tablón</button>
+          <button id="tab-submissions" class="tab-btn">Entregas de Alumnos</button>
+        </div>
       </header>
 
-      <div class="class-content">
+      <div id="class-board-view" class="class-content">
         <!-- Assignments Section -->
         <div class="section-assignments">
           <div class="section-header">
@@ -106,6 +114,16 @@
           </form>
         </div>
       </div>
+
+      <!-- Vista global de Entregas (Solo Profesor) -->
+      <div id="class-submissions-view" class="hidden">
+        <div class="section-header">
+          <h3>Todas las Entregas</h3>
+        </div>
+        <div id="all-submissions-list" class="grid-list" style="margin-top: 1rem;">
+          <!-- Se inyectarán tarjetas de entregas agrupadas por alumno -->
+        </div>
+      </div>
     </section>
 
   </div>
@@ -125,11 +143,15 @@
         <!-- Submission Section for students -->
         <div id="submission-section" class="submission-section hidden">
           <h3>Tu Entrega</h3>
+          <div id="submission-status" class="submission-status hidden" style="margin-bottom: 1rem;"></div>
           <form id="form-submit-assignment">
-            <textarea id="submission-content" placeholder="Escribe tu respuesta o pega el enlace de tu trabajo..." required></textarea>
+            <textarea id="submission-content" placeholder="Escribe tu respuesta o pega el enlace de tu trabajo..."></textarea>
+            <div style="margin: 1rem 0;">
+              <label for="submission-file">Archivo adjunto (opcional):</label>
+              <input type="file" id="submission-file" accept=".pdf,.doc,.docx,.jpg,.png,.zip" style="margin-top: 0.5rem; width: 100%; border: 1px dashed var(--border-color); padding: 1rem; background: rgba(0,0,0,0.1); border-radius: var(--radius-sm); cursor: pointer;" />
+            </div>
             <button type="submit" class="btn-primary">Enviar Entrega</button>
           </form>
-          <div id="submission-status" class="submission-status hidden"></div>
         </div>
 
         <!-- Submissions List for teachers -->
